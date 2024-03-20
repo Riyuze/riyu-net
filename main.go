@@ -1,7 +1,29 @@
 package main
 
-import "fmt"
+import (
+	"time"
+
+	"github.com/Riyuze/riyu-net/network"
+)
 
 func main() {
-	fmt.Println("Riyu-Net")
+	trLocal := network.NewLocalTransport("LOCAL")
+	trRemote := network.NewLocalTransport("REMOTE")
+
+	trLocal.Connect(trRemote)
+	trRemote.Connect(trLocal)
+
+	go func() {
+		for {
+			trRemote.SendMessage(trLocal.Addr(), []byte("Hello World"))
+			time.Sleep(2 * time.Second)
+		}
+	}()
+
+	opts := network.ServerOpts{
+		Transports: []network.Transport{trLocal},
+	}
+
+	s := network.NewServer(opts)
+	s.Start()
 }
